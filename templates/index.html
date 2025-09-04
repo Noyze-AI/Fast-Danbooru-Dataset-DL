@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastDanbooruDataset</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn-cancel:hover {
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+        }
+
+        .status-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value {
+            color: #666;
+        }
+
+        .downloading {
+            color: #4a90e2;
+            font-weight: 600;
+        }
+
+        .completed {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4a90e2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #e1e5e9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 FastDanbooruDataset</h1>
+            <p>一键极速生成 Danbooru 数据集！</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="tag">🏷️ 标签 (Tag)</label>
+                    <input type="text" id="tag" placeholder="输入要下载的标签，例如: landscape">
+                </div>
+
+                <div class="form-group">
+                    <label for="download_dir">📁 下载目录</label>
+                    <input type="text" id="download_dir" value="dataset" placeholder="输入下载目录路径">
+                </div>
+
+                <div class="form-group">
+                    <label for="max_count">🔢 最大下载数量</label>
+                    <input type="number" id="max_count" value="50" min="1" max="1000" placeholder="设置最大下载数量">
+                </div>
+
+                <div class="form-group">
+                    <button id="start-btn" class="btn">🚀 开始下载</button>
+                    <button id="cancel-btn" class="btn btn-cancel hidden">🛑 取消下载</button>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h3>📊 下载状态</h3>
+                <div class="status-item">
+                    <span class="status-label">状态</span>
+                    <span id="status" class="status-value">等待开始...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">已下载文件数</span>
+                    <span id="file-count" class="status-value">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Gallery-dl 可用性</span>
+                    <span id="gallery-dl-status" class="status-value">检查中...</span>
+                </div>
+            </div>
+
+            <div class="status-section">
+                <h3>🏷️ 标签后处理</h3>
+                <div class="form-group">
+                    <label for="process-folder">📁 处理文件夹</label>
+                    <input type="text" id="process-folder" placeholder="输入文件夹路径，如: dataset/tag_name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="delete-tags">🗑️ 删除标签 (用逗号分隔)</label>
+                    <input type="text" id="delete-tags" placeholder="例如: bad_quality, low_res">
+                </div>
+                
+                <div class="form-group">
+                    <label for="delete-containing">🔍 删除包含特定字符串的标签</label>
+                    <input type="text" id="delete-containing" placeholder="例如: bad, low">
+                </div>
+                
+                <div class="form-group">
+                    <label for="add-tags">➕ 添加标签 (用逗号分隔)</label>
+                    <input type="text" id="add-tags" placeholder="例如: high_quality, masterpiece">
+                </div>
+                
+                <div class="form-group">
+                    <button id="process-tags-btn" class="btn">🔄 处理标签</button>
+                    <button id="auto-standardize-btn" class="btn">⚡ 自动标准化</button>
+                    <button id="refresh-folders-btn" class="btn">🔄 自动填充路径</button>
+                </div>
+                
+                <div id="process-result" class="status-item hidden">
+                    <span class="status-label">处理结果</span>
+                    <span id="process-result-text" class="status-value"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><a href="https://github.com/Noyze-AI" target="_blank">FastDanbooruDataset -by Noyze</a></p>
+            <p><a href="https://github.com/mikf/gallery-dl" target="_blank">Based on gallery-dl</a></p>
+        </div>
+    </div>
+
+    <script>
+        let isDownloading = false;
+        let statusInterval;
+
+        // DOM 元素
+        const tagInput = document.getElementById('tag');
+        const downloadDirInput = document.getElementById('download_dir');
+        const maxCountInput = document.getElementById('max_count');
+        const startBtn = document.getElementById('start-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const statusElement = document.getElementById('status');
+        const fileCountElement = document.getElementById('file-count');
+        const galleryDlStatusElement = document.getElementById('gallery-dl-status');
+
+        // 开始下载
+        startBtn.addEventListener('click', async () => {
+            const tag = tagInput.value.trim();
+            const downloadDir = downloadDirInput.value.trim();
+            const maxCount = parseInt(maxCountInput.value) || 50;
+
+            if (!tag) {
+                alert('请输入标签');
+                return;
+            }
+
+            if (!downloadDir) {
+                alert('请输入下载目录');
+                return;
+            }
+
+            if (maxCount < 1 || maxCount > 1000) {
+                alert('最大下载数量必须在1-1000之间');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tag: tag,
+                        download_dir: downloadDir,
+                        max_count: maxCount
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    isDownloading = true;
+                    startBtn.classList.add('hidden');
+                    cancelBtn.classList.remove('hidden');
+                    startStatusPolling();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('请求失败: ' + error.message);
+            }
+        });
+
+        // 取消下载
+        cancelBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/cancel', {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+                alert(result.message);
+
+                if (result.success) {
+                    isDownloading = false;
+                    startBtn.classList.remove('hidden');
+                    cancelBtn.classList.add('hidden');
+                    stopStatusPolling();
+                }
+            } catch (error) {
+                alert('取消失败: ' + error.message);
+            }
+        });
+
+        // 开始状态轮询
+        function startStatusPolling() {
+            statusInterval = setInterval(updateStatus, 1000);
+        }
+
+        // 停止状态轮询
+        function stopStatusPolling() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+        }
+
+        // 更新状态
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const status = await response.json();
+
+                // 更新状态显示
+                statusElement.textContent = status.status || '未知状态';
+                fileCountElement.textContent = status.file_count || 0;
+                galleryDlStatusElement.textContent = status.gallery_dl_available ? '✅ 可用' : '❌ 不可用';
+
+                // 更新状态样式
+                statusElement.className = 'status-value';
+                if (status.is_downloading) {
+                    statusElement.classList.add('downloading');
+                } else if (status.status && status.status.includes('完成')) {
+                    statusElement.classList.add('completed');
+                    isDownloading = false;
+                    startBtn.classList.remove('hidden');
+                    cancelBtn.classList.add('hidden');
+                    stopStatusPolling();
+                } else if (status.status && (status.status.includes('错误') || status.status.includes('失败'))) {
+                    statusElement.classList.add('error');
+                    isDownloading = false;
+                    startBtn.classList.remove('hidden');
+                    cancelBtn.classList.add('hidden');
+                    stopStatusPolling();
+                }
+
+                // 如果下载已停止，停止轮询
+                if (!status.is_downloading && isDownloading) {
+                    isDownloading = false;
+                    startBtn.classList.remove('hidden');
+                    cancelBtn.classList.add('hidden');
+                    stopStatusPolling();
+                }
+            } catch (error) {
+                console.error('获取状态失败:', error);
+            }
+        }
+
+        // 页面加载时获取初始状态
+        updateStatus();
+        
+        // 监听标签和下载目录变化，自动设置处理文件夹
+        tagInput.addEventListener('input', setDefaultFolder);
+        downloadDirInput.addEventListener('input', setDefaultFolder);
+
+        // 标签处理相关元素
+        const processFolderInput = document.getElementById('process-folder');
+        const deleteTagsInput = document.getElementById('delete-tags');
+        const deleteContainingInput = document.getElementById('delete-containing');
+        const addTagsInput = document.getElementById('add-tags');
+        const processTagsBtn = document.getElementById('process-tags-btn');
+        const autoStandardizeBtn = document.getElementById('auto-standardize-btn');
+        const refreshFoldersBtn = document.getElementById('refresh-folders-btn');
+        const processResult = document.getElementById('process-result');
+        const processResultText = document.getElementById('process-result-text');
+
+        // 设置默认文件夹路径
+        function setDefaultFolder() {
+            const downloadDir = downloadDirInput.value.trim() || 'dataset';
+            const tag = tagInput.value.trim();
+            if (tag) {
+                processFolderInput.value = `${downloadDir}/${tag}`;
+            }
+        }
+
+        // 刷新文件夹路径
+        refreshFoldersBtn.addEventListener('click', setDefaultFolder);
+
+        // 处理标签
+        processTagsBtn.addEventListener('click', async () => {
+            const folder = processFolderInput.value.trim();
+            const deleteTags = deleteTagsInput.value.trim();
+            const deleteContaining = deleteContainingInput.value.trim();
+            const addTags = addTagsInput.value.trim();
+
+            if (!folder) {
+                alert('请选择要处理的文件夹');
+                return;
+            }
+
+            if (!deleteTags && !deleteContaining && !addTags) {
+                alert('请至少指定一种处理操作');
+                return;
+            }
+
+            // 构建处理参数
+            const processData = {
+                folder_path: folder
+            };
+
+            if (deleteTags) {
+                processData.remove_tags = deleteTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            }
+
+            if (deleteContaining) {
+                processData.remove_containing = deleteContaining.split(',').map(str => str.trim()).filter(str => str);
+            }
+
+            if (addTags) {
+                processData.add_tags = addTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            }
+
+            try {
+                processTagsBtn.disabled = true;
+                processTagsBtn.textContent = '处理中...';
+                
+                const response = await fetch('/api/manual_tag_process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(processData)
+                });
+
+                const result = await response.json();
+                
+                // 显示处理结果
+                processResult.classList.remove('hidden');
+                if (result.success) {
+                    processResultText.textContent = `处理完成: ${result.message}`;
+                    processResultText.className = 'status-value completed';
+                    
+                    // 清空输入框
+                    deleteTagsInput.value = '';
+                    deleteContainingInput.value = '';
+                    addTagsInput.value = '';
+                } else {
+                    processResultText.textContent = `处理失败: ${result.message}`;
+                    processResultText.className = 'status-value error';
+                }
+            } catch (error) {
+                processResult.classList.remove('hidden');
+                processResultText.textContent = `请求失败: ${error.message}`;
+                processResultText.className = 'status-value error';
+            } finally {
+                processTagsBtn.disabled = false;
+                processTagsBtn.textContent = '🔄 处理标签';
+            }
+        });
+
+        // 自动标准化标签
+        autoStandardizeBtn.addEventListener('click', async () => {
+            const folder = processFolderInput.value.trim();
+
+            if (!folder) {
+                alert('请选择要处理的文件夹');
+                return;
+            }
+
+            try {
+                autoStandardizeBtn.disabled = true;
+                autoStandardizeBtn.textContent = '标准化中...';
+                
+                const response = await fetch('/api/auto_standardize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        folder_path: folder
+                    })
+                });
+
+                const result = await response.json();
+                
+                // 显示处理结果
+                processResult.classList.remove('hidden');
+                if (result.success) {
+                    processResultText.textContent = `自动标准化完成: ${result.message}`;
+                    processResultText.className = 'status-value completed';
+                } else {
+                    processResultText.textContent = `自动标准化失败: ${result.message}`;
+                    processResultText.className = 'status-value error';
+                }
+            } catch (error) {
+                processResult.classList.remove('hidden');
+                processResultText.textContent = `请求失败: ${error.message}`;
+                processResultText.className = 'status-value error';
+            } finally {
+                autoStandardizeBtn.disabled = false;
+                autoStandardizeBtn.textContent = '⚡ 自动标准化';
+            }
+        });
+
+        // 目录输入功能 - 允许用户直接输入
+    </script>
+</body>
+</html>
