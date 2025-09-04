@@ -40,8 +40,8 @@
 
 1. **克隆项目**
    ```bash
-   git clone https://github.com/Noyze-AI/FastDanbooruDataset.git
-   cd FastDanbooruDataset
+   git clone https://github.com/Noyze-AI/Fast-Danbooru-Dataset-DL.git
+   cd Fast-Danbooru-Dataset-DL
    ```
 
 2. **一键启动**（Windows）
